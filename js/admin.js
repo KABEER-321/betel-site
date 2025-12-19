@@ -299,21 +299,31 @@ function renderAllTable() {
     let displayData = allData;
 
     if (currentFilter === 'inquiry') {
-        // Inquiries Tab: Show 'New' or 'Pending' items
-        displayData = allData.filter(d => d.status === 'New' || d.status === 'Pending');
+        // Show only Inquiries
+        displayData = allData.filter(d => d.type === 'inquiry' || (!d.type && d.status === 'New'));
     } else if (currentFilter === 'order') {
-        // Orders Tab: Show everything (or maybe exclude 'New' if strict? Let's show all for now)
-        displayData = allData;
+        // Show only Orders
+        displayData = allData.filter(d => d.type === 'order' || (!d.type && d.status !== 'New'));
     }
 
     // Sort by date/ID descending (newest first)
     // Assuming simple order for now (API returns newest first usually or we unshifted to top)
 
     displayData.forEach((item, index) => {
+        // Dynamic Details Column
+        let details = '';
+        if (item.type === 'order') {
+            details = `<strong>${item.product || 'Betel Leaf'}</strong><br>
+                       <small>Qty: ${item.quantity || '-'}</small><br>
+                       <small>${item.address || ''}</small>`;
+        } else {
+            details = `<span class="text-muted">${item.message || 'No message'}</span>`;
+        }
+
         const row = `<tr>
             <td><strong>#${item.id}</strong><br><small>${item.date}</small></td>
             <td>${item.name}<br><small>${item.phone}</small></td>
-            <td>${item.type}<br><small>${item.message || '-'}</small></td>
+            <td>${details}</td>
             <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
             <td>
                <button class="btn-sm" style="color:green; border-color:green;" onclick="updateStatus('${item.id}', 'Completed')">✓</button>

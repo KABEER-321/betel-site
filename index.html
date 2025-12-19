@@ -201,32 +201,69 @@
                 </div>
             </div>
 
-            <div class="contact-form-wrapper">
-                <h3>Send Inquiry</h3>
+            <!-- Order Form Section -->
+            <div class="contact-form-wrapper" id="order-section" style="margin-bottom: 40px;">
+                <h3><i class="ri-shopping-cart-fill"></i> Place an Order</h3>
+                <p style="margin-bottom: 20px; color: #666;">Select your requirement and we will process it immediately.
+                </p>
                 <form class="contact-form" id="orderForm">
+                    <input type="hidden" name="type" value="order">
                     <div class="form-group">
                         <label>Your Name</label>
-                        <input type="text" placeholder="John Doe" required>
+                        <input type="text" name="name" placeholder="Enter your full name" required>
                     </div>
                     <div class="form-group">
                         <label>Phone Number</label>
-                        <input type="tel" placeholder="+91..." required>
+                        <input type="tel" name="phone" placeholder="+91..." required>
                     </div>
                     <div class="form-group">
-                        <label>Order Type</label>
-                        <select required>
-                            <option value="">Select Requirement</option>
-                            <option value="retail">Retail (Small Qty)</option>
-                            <option value="wholesale">Wholesale (Bulk)</option>
-                            <option value="export">Export</option>
-                        </select>
+                        <label>Delivery Address</label>
+                        <textarea name="address" rows="2" placeholder="Full delivery address with Pincode"
+                            required></textarea>
+                    </div>
+                    <div class="form-group-row" style="display:flex; gap:15px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Product</label>
+                            <select name="product" required>
+                                <option value="">Select Leaf Type</option>
+                                <option value="Kolkata Betel Leaf">Kolkata Betel Leaf</option>
+                                <option value="Banarasi Betel Leaf">Banarasi Betel Leaf</option>
+                                <option value="Simple Leaf">Simple Leaf (Sada)</option>
+                                <option value="Mixed/Other">Mixed / Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Quantity</label>
+                            <input type="text" name="quantity" placeholder="e.g. 500 pcs, 10 baskets" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Confirm Order</button>
+                    <div class="form-feedback hidden">Order Placed! ID sent via SMS.</div>
+                </form>
+            </div>
+
+            <!-- General Inquiry Section -->
+            <div class="contact-form-wrapper" id="inquiry-section"
+                style="border-top: 2px solid #eee; padding-top: 30px;">
+                <h3><i class="ri-question-answer-fill"></i> General Inquiry</h3>
+                <p style="margin-bottom: 20px; color: #666;">Have a question? Send us a message.</p>
+                <form class="contact-form" id="inquiryForm">
+                    <input type="hidden" name="type" value="inquiry">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" placeholder="Your Name" required>
                     </div>
                     <div class="form-group">
-                        <label>Message / Quantity</label>
-                        <textarea rows="3" placeholder="I need 500 pieces of Kolkata Betel Leaves..."></textarea>
+                        <label>Phone</label>
+                        <input type="tel" name="phone" placeholder="+91..." required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Submit Inquiry</button>
-                    <div id="formFeedback" class="form-feedback hidden">Thank you! We will contact you soon.</div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea name="message" rows="3" placeholder="How can we help you?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-block" style="background:#555;">Send
+                        Message</button>
+                    <div class="form-feedback hidden">Message Sent! We will contact you.</div>
                 </form>
             </div>
         </div>

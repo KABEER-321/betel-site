@@ -28,52 +28,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Form Submission Logic (Real Persistence)
-    const orderForm = document.getElementById('orderForm');
-    const formFeedback = document.getElementById('formFeedback');
+    // Form Submission Logic (Generic Handler)
+    function handleFormSubmit(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
 
-    if (orderForm) {
-        orderForm.addEventListener('submit', (e) => {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-
-            const btn = orderForm.querySelector('button[type="submit"]');
+            const btn = form.querySelector('button[type="submit"]');
+            const feedback = form.querySelector('.form-feedback');
             const originalText = btn.innerText;
-            btn.innerText = 'Sending...';
+
+            btn.innerText = 'Processing...';
             btn.disabled = true;
 
-            // Capture Data
-            const inputs = orderForm.querySelectorAll('input, select, textarea');
-            const formData = {};
-
-            inputs.forEach(input => {
-                if (input.tagName === 'SELECT') {
-                    formData.type = input.value;
-                } else if (input.type === 'text' && input.placeholder.includes('Name')) {
-                    formData.name = input.value;
-                } else if (input.type === 'tel') {
-                    formData.phone = input.value;
-                } else if (input.tagName === 'TEXTAREA') {
-                    formData.message = input.value;
-                }
-            });
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
 
             // Send to API
             fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(data)
             })
                 .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        formFeedback.classList.remove('hidden');
-                        orderForm.reset();
-
-                        setTimeout(() => {
-                            formFeedback.classList.add('hidden');
-                        }, 5000);
+                .then(resData => {
+                    if (resData.success) {
+                        feedback.classList.remove('hidden');
+                        form.reset();
+                        setTimeout(() => feedback.classList.add('hidden'), 5000);
                     } else {
-                        alert('Error submitting order.');
+                        alert('Error: ' + resData.error);
                     }
                 })
                 .catch(err => console.error(err))
@@ -83,6 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         });
     }
+
+    // Initialize listeners
+    handleFormSubmit('orderForm');
+    handleFormSubmit('inquiryForm');
 
     // Navbar Scroll Effect
     const navbar = document.querySelector('.navbar');

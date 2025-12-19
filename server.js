@@ -14,17 +14,32 @@ app.use(bodyParser.json());
 app.use(express.static('.')); // Serve static files (HTML/CSS/JS)
 
 // --- Helper Functions ---
+// --- Helper Functions ---
+function ensureDataDir() {
+    const dir = path.dirname(DATA_FILE);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+}
+
 function getOrders() {
     try {
+        ensureDataDir();
         if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
         return JSON.parse(fs.readFileSync(DATA_FILE));
     } catch (err) {
+        console.error('Error reading orders:', err);
         return [];
     }
 }
 
 function saveOrders(orders) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(orders, null, 2));
+    try {
+        ensureDataDir();
+        fs.writeFileSync(DATA_FILE, JSON.stringify(orders, null, 2));
+    } catch (err) {
+        console.error('Error saving orders:', err);
+    }
 }
 
 // --- API Endpoints ---

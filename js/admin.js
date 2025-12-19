@@ -266,18 +266,64 @@ function saveAndRender() {
     // Deprecated in favor of API calls
 }
 
+// Restoration of switchView function
 function switchView(viewName) {
     // Hide all
     document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
 
-    // Show target
-    document.getElementById(`view-${viewName}`).classList.remove('hidden');
-
-    // Update menu active state
-    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-    // Simple match for demo
-    if (viewName === 'dashboard')
+    // Simplified routing
+    if (viewName === 'dashboard') {
+        document.getElementById('view-dashboard').classList.remove('hidden');
         document.querySelector('.menu-item:nth-child(1)').classList.add('active');
-    else
+        currentFilter = null; // Reset filter
+    } else if (viewName === 'orders') {
+        document.getElementById('view-orders').classList.remove('hidden');
         document.querySelector('.menu-item:nth-child(2)').classList.add('active');
+        currentFilter = 'order';
+        document.getElementById('pageTitle').innerText = 'All Orders';
+    } else if (viewName === 'inquiries') {
+        document.getElementById('view-orders').classList.remove('hidden');
+        document.querySelector('.menu-item:nth-child(3)').classList.add('active');
+        currentFilter = 'inquiry';
+        document.getElementById('pageTitle').innerText = 'Inquiries & Requests';
+    }
+}
+
+// Global filter state
+let currentFilter = 'all';
+
+function renderAllTable() {
+    const tbody = document.querySelector('#allOrdersTable tbody');
+    tbody.innerHTML = '';
+
+    let displayData = allData;
+
+    if (currentFilter === 'inquiry') {
+        // Inquiries Tab: Show 'New' or 'Pending' items
+        displayData = allData.filter(d => d.status === 'New' || d.status === 'Pending');
+    } else if (currentFilter === 'order') {
+        // Orders Tab: Show everything (or maybe exclude 'New' if strict? Let's show all for now)
+        displayData = allData;
+    }
+
+    // Sort by date/ID descending (newest first)
+    // Assuming simple order for now (API returns newest first usually or we unshifted to top)
+
+    displayData.forEach((item, index) => {
+        const row = `<tr>
+            <td><strong>#${item.id}</strong><br><small>${item.date}</small></td>
+            <td>${item.name}<br><small>${item.phone}</small></td>
+            <td>${item.type}<br><small>${item.message || '-'}</small></td>
+            <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
+            <td>
+               <button class="btn-sm" style="color:green; border-color:green;" onclick="updateStatus('${item.id}', 'Completed')">✓</button>
+               <button class="btn-sm" style="color:red; border-color:red;" onclick="deleteItem('${item.id}')">✗</button>
+            </td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+
+    if (displayData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No records found.</td></tr>';
+    }
 }

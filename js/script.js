@@ -56,12 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(res => res.json())
                 .then(resData => {
                     if (resData.success) {
-                        alert('Success! System ID: ' + resData.order.id); // Visible success
+                        // success feedback
                         feedback.classList.remove('hidden');
                         form.reset();
                         setTimeout(() => feedback.classList.add('hidden'), 5000);
                     } else {
-                        alert('Error from Server: ' + resData.error);
+                        alert('Error: ' + resData.error);
                     }
                 })
                 .catch(err => {

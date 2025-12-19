@@ -36,11 +36,16 @@ app.post('/api/auth/send-otp', (req, res) => {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ error: 'Phone required' });
 
+    // STRICT LOCK: Only allow the owner's number
+    if (phone !== '8432464520') {
+        return res.json({ success: false, message: 'Access Denied: Number not authorized for Admin.' });
+    }
+
     lastOTP = Math.floor(1000 + Math.random() * 9000).toString();
     console.log(`[AUTH] OTP for ${phone}: ${lastOTP}`);
 
-    // In real app, send SMS here.
-    res.json({ success: true, message: 'OTP Sent', debug_otp: lastOTP });
+    // In real app, send SMS here. For now, we allow access.
+    res.json({ success: true, message: 'OTP Sent to Admin Mobile', debug_otp: lastOTP });
 });
 
 app.post('/api/auth/verify', (req, res) => {

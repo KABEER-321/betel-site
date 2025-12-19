@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
+            // alert('Processing form: ' + formId); // Debug
+
             // Send to API
             fetch('/api/orders', {
                 method: 'POST',
@@ -54,14 +56,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(res => res.json())
                 .then(resData => {
                     if (resData.success) {
+                        alert('Success! System ID: ' + resData.order.id); // Visible success
                         feedback.classList.remove('hidden');
                         form.reset();
                         setTimeout(() => feedback.classList.add('hidden'), 5000);
                     } else {
-                        alert('Error: ' + resData.error);
+                        alert('Error from Server: ' + resData.error);
                     }
                 })
-                .catch(err => console.error(err))
+                .catch(err => {
+                    console.error(err);
+                    alert('Network Error: ' + err.message);
+                })
                 .finally(() => {
                     btn.innerText = originalText;
                     btn.disabled = false;

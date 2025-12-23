@@ -8,9 +8,7 @@
     <!-- Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin_pro.css?v=1">
 </head>
 
 <body>
@@ -20,49 +18,49 @@
         <!-- 1. Phone Input -->
         <div id="step-phone" class="auth-box">
             <div class="auth-logo">Mattesabnavar <span>Admin</span></div>
-            <p class="auth-desc">Verify your mobile number to access the dashboard.</p>
+            <p class="auth-desc">Verify your mobile number to setup/login.</p>
             <div class="form-group">
                 <label>Mobile Number</label>
                 <input type="tel" id="mobileInput" placeholder="+91 98765 43210" maxlength="10">
                 <div class="error-msg" id="phoneError"></div>
             </div>
-            <button class="btn-modern btn-block" onclick="sendOTP()">Send OTP</button>
+            <button class="btn" onclick="sendOTP()">Send OTP</button>
         </div>
 
         <!-- 2. OTP Input -->
         <div id="step-otp" class="auth-box hidden">
             <div class="auth-logo">Verify <span>OTP</span></div>
-            <p class="auth-desc">Enter the 4-digit code sent to your mobile.</p>
+            <p class="auth-desc">Enter the OTP sent to your mobile.</p>
             <div class="form-group">
                 <label>One Time Password</label>
-                <input type="text" id="otpInput" placeholder="● ● ● ●" maxlength="4"
-                    style="letter-spacing: 12px; text-align: center;">
+                <input type="text" id="otpInput" placeholder="1234" maxlength="4"
+                    style="letter-spacing: 5px; text-align: center;">
                 <div class="error-msg" id="otpError"></div>
             </div>
-            <button class="btn-modern btn-block" onclick="verifyOTP()">Verify OTP</button>
+            <button class="btn" onclick="verifyOTP()">Verify</button>
             <div class="btn-link" onclick="restartAuth()">Change Number</div>
         </div>
 
-        <!-- 3. Setup Credentials -->
+        <!-- 3. Setup Credentials (First Time Only) -->
         <div id="step-setup" class="auth-box hidden">
-            <div class="auth-logo">Setup <span>Profile</span></div>
-            <p class="auth-desc">Create your administration credentials.</p>
+            <div class="auth-logo">Setup <span>Admin</span></div>
+            <p class="auth-desc">Create your Admin ID and Password.</p>
             <div class="form-group">
                 <label>Admin ID</label>
-                <input type="text" id="setupId" placeholder="e.g. admin_kabeer">
+                <input type="text" id="setupId" placeholder="admin">
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="setupPass" placeholder="••••••••">
+                <input type="password" id="setupPass" placeholder="******">
             </div>
             <div class="error-msg" id="setupError"></div>
-            <button class="btn-modern btn-block" onclick="completeSetup()">Create Account</button>
+            <button class="btn" onclick="completeSetup()">Create Account</button>
         </div>
 
-        <!-- 4. Login -->
+        <!-- 4. Login (Subsequent Times) -->
         <div id="step-login" class="auth-box hidden">
             <div class="auth-logo">Admin <span>Login</span></div>
-            <p class="auth-desc">Secure access to your management panel.</p>
+            <p class="auth-desc">Enter your credentials to access dashboard.</p>
             <div class="form-group">
                 <label>Admin ID</label>
                 <input type="text" id="loginId">
@@ -72,8 +70,8 @@
                 <input type="password" id="loginPass">
             </div>
             <div class="error-msg" id="loginError"></div>
-            <button class="btn-modern btn-block" onclick="login()">Sign In</button>
-            <div class="btn-link" onclick="clearData()">Clear Local Cache</div>
+            <button class="btn" onclick="login()">Login</button>
+            <div class="btn-link" onclick="clearData()">Reset Mock Data</div>
         </div>
     </div>
 
@@ -108,7 +106,7 @@
                     <h2 id="pageTitle">Overview</h2>
                 </div>
                 <div class="user-profile">
-                    <span id="adminNameDisplay">Admin</span>
+                    <span>Admin</span>
                     <div class="user-avatar">MK</div>
                 </div>
             </div>
@@ -121,31 +119,20 @@
 
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon" style="background:#DBEAFE; color:#1E40AF">
-                                <i class="ri-shopping-bag-3-fill"></i>
-                            </div>
-                            <div class="stat-info">
-                                <span class="stat-label">Total Orders</span>
-                                <span class="stat-value" id="totalOrders">0</span>
-                            </div>
+                            <i class="ri-shopping-bag-3-fill stat-icon" style="background:#DBEAFE; color:#1E40AF"></i>
+                            <span class="stat-label">Total Orders</span>
+                            <span class="stat-value" id="totalOrders">0</span>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background:#FEF3C7; color:#B45309">
-                                <i class="ri-chat-1-fill"></i>
-                            </div>
-                            <div class="stat-info">
-                                <span class="stat-label">Pending Inquiries</span>
-                                <span class="stat-value" id="pendingInquiries">0</span>
-                            </div>
+                            <i class="ri-chat-1-fill stat-icon" style="background:#FEF3C7; color:#B45309"></i>
+                            <span class="stat-label">Pending Inquiries</span>
+                            <span class="stat-value" id="pendingInquiries">0</span>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background:#D1FAE5; color:#065F46">
-                                <i class="ri-money-dollar-circle-fill"></i>
-                            </div>
-                            <div class="stat-info">
-                                <span class="stat-label">Revenue (Est.)</span>
-                                <span class="stat-value" id="totalRevenue">₹0</span>
-                            </div>
+                            <i class="ri-money-dollar-circle-fill stat-icon"
+                                style="background:#D1FAE5; color:#065F46"></i>
+                            <span class="stat-label">Revenue (Est.)</span>
+                            <span class="stat-value" id="totalRevenue">₹0</span>
                         </div>
                     </div>
 
@@ -154,20 +141,18 @@
                             <h3>Recent Activities</h3>
                             <button class="btn-modern" onclick="switchView('orders')">View All</button>
                         </div>
-                        <div class="table-responsive">
-                            <table class="modern-table">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Customer</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recentOrdersTable"></tbody>
-                            </table>
-                        </div>
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Customer</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentOrdersTable"></tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -175,16 +160,17 @@
                 <div id="view-orders" class="content-section hidden">
                     <div class="table-card">
                         <div class="table-header-row">
-                            <h3 id="manageRecordsTitle">Manage Records</h3>
-                            <button class="btn-modern" onclick="renderAll()">Refresh Data</button>
+                            <!-- Title is handled by JS updating top-header usually, but we have it here too -->
+                            <h3>Manage Records</h3>
+                            <button class="btn-modern" onclick="renderAll()">Refresh</button>
                         </div>
                         <div class="table-responsive">
                             <table id="allOrdersTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Customer Info</th>
-                                        <th>Request Details</th>
+                                        <th>Name / Phone</th>
+                                        <th>Details</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>

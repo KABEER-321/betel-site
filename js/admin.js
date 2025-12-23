@@ -1,11 +1,8 @@
-// Mock Authentication & Dashboard Logic
+// Authentication Keys
+const AUTH_CONFIG_KEY = 'admin_config';
+const AUTH_SESSION_KEY = 'admin_session';
 
-// Constants
-const ADMIN_CONFIG_KEY = 'greenLeaf_admin_config';
-const AUTH_SESSION_KEY = 'greenLeaf_auth_session';
-const DATA_KEY = 'greenLeaf_orders';
-
-// DOM Elements
+// UI Elements
 const views = {
     authContainer: document.getElementById('auth-container'),
     phone: document.getElementById('step-phone'),
@@ -15,13 +12,15 @@ const views = {
     dashboard: document.getElementById('dashboard-view')
 };
 
-// Global Data
-let currentOTP = null;
-let allData = [];
+// State
+let allOrders = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     checkSession();
+    if (localStorage.getItem(AUTH_SESSION_KEY)) {
+        renderDashboard();
+    }
 });
 
 function checkSession() {
@@ -35,17 +34,12 @@ function checkSession() {
     }
 }
 
-function getAdminConfig() {
-    return JSON.parse(localStorage.getItem(ADMIN_CONFIG_KEY) || 'null');
-}
-
 function showAuth(config) {
     views.dashboard.classList.add('hidden');
     views.authContainer.classList.remove('hidden');
 
-    // Hide all steps explicitly
-    [views.phone, views.otp, views.setup, views.login].forEach(el => {
-        if (el) el.classList.add('hidden');
+    Object.values(views).forEach(el => {
+        if (el && el.id && el.id.startsWith('step-')) el.classList.add('hidden');
     });
 
     if (config && config.isSetup) {
@@ -58,100 +52,92 @@ function showAuth(config) {
 function showDashboardView() {
     views.authContainer.classList.add('hidden');
     views.dashboard.classList.remove('hidden');
-
-    const config = getAdminConfig();
-    if (config) {
-        document.getElementById('adminNameDisplay').innerText = config.id;
-    }
-
-    // Load Data
-    renderAll();
+    renderDashboard();
 }
 
-/* --- Authentication Flows --- */
-function sendOTP() {
+// 1. Phone Handlers
+async function sendOTP() {
     const phone = document.getElementById('mobileInput').value;
-    const error = document.getElementById('phoneError');
-    if (!/^\d{10}$/.test(phone)) {
-        error.innerText = "Please enter a valid 10-digit mobile number.";
-        return;
-    }
-    error.innerText = "";
+    if (!phone) return alert('Enter phone');
 
-    fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone })
-    })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message || 'OTP Sent (Check console/server logs)');
-            if (data.debug_otp) alert(`[MOCK SMS] OTP: ${data.debug_otp}`); // Keep visual for user convenience
+    try {
+        const res = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Show OTP for test purposes since this is a mock
+            alert(`TEST OTP SENT: ${data.debug_otp}`);
+
+            // Add on-screen backup in case alerts are blocked
+            const feedback = document.createElement('div');
+            feedback.innerHTML = `<p style="padding:10px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; margin-bottom:20px; color:#0369a1; font-weight:600;">
+                Test Mode: Your OTP is <span style="font-size:1.2rem; color:#0c4a6e">${data.debug_otp}</span></p>`;
+            views.otp.prepend(feedback);
+
             views.phone.classList.add('hidden');
             views.otp.classList.remove('hidden');
-        })
-        .catch(err => alert('Failed to send OTP'));
+        } else {
+            alert(data.message || 'Error');
+        }
+    } catch (e) {
+        alert('Server Error');
+    }
 }
 
-function verifyOTP() {
-    const input = document.getElementById('otpInput').value;
-
-    fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: input })
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const config = getAdminConfig();
+async function verifyOTP() {
+    const otp = document.getElementById('otpInput').value;
+    try {
+        const res = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otp })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const config = getAdminConfig();
+            if (config && config.isSetup) {
+                // Already setup, but re-verifying phone? Usually login handles this.
+                views.otp.classList.add('hidden');
+                views.login.classList.remove('hidden');
+            } else {
                 views.otp.classList.add('hidden');
                 views.setup.classList.remove('hidden');
-            } else {
-                document.getElementById('otpError').innerText = "Invalid OTP.";
             }
-        });
+        } else {
+            alert('Invalid OTP');
+        }
+    } catch (e) {
+        alert('Verification Failed');
+    }
 }
 
-function restartAuth() {
-    views.otp.classList.add('hidden');
-    views.phone.classList.remove('hidden');
-}
-
+// 2. Setup Handlers
 function completeSetup() {
     const id = document.getElementById('setupId').value;
     const pass = document.getElementById('setupPass').value;
-    if (id.length < 3 || pass.length < 4) {
-        document.getElementById('setupError').innerText = "Admin ID 3+ chars, Pass 4+ chars.";
-        return;
-    }
-    const config = { isSetup: true, id: id, pass: pass };
-    localStorage.setItem(ADMIN_CONFIG_KEY, JSON.stringify(config));
-    alert("Setup Complete!");
-    views.setup.classList.add('hidden');
-    views.login.classList.remove('hidden');
+    if (!id || !pass) return alert('Fill all fields');
+
+    const config = { adminId: id, adminPass: pass, isSetup: true };
+    localStorage.setItem(AUTH_CONFIG_KEY, JSON.stringify(config));
+    alert('Setup Complete! Please login.');
+    showAuth(config);
 }
 
+// 3. Login Handlers
 function login() {
     const id = document.getElementById('loginId').value;
     const pass = document.getElementById('loginPass').value;
+    const config = getAdminConfig();
 
-    fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, pass })
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                localStorage.setItem(AUTH_SESSION_KEY, 'true');
-                // Save local credentials for name display since simplistic setup
-                localStorage.setItem(ADMIN_CONFIG_KEY, JSON.stringify({ isSetup: true, id: id }));
-                showDashboardView();
-            } else {
-                document.getElementById('loginError').innerText = "Invalid credentials.";
-            }
-        });
+    if (id === config.adminId && pass === config.adminPass) {
+        localStorage.setItem(AUTH_SESSION_KEY, 'active');
+        showDashboardView();
+    } else {
+        alert('Invalid Credentials');
+    }
 }
 
 function logout() {
@@ -159,191 +145,129 @@ function logout() {
     location.reload();
 }
 
+// Helper
+function getAdminConfig() {
+    const config = localStorage.getItem(AUTH_CONFIG_KEY);
+    return config ? JSON.parse(config) : null;
+}
+
+function restartAuth() {
+    views.otp.classList.add('hidden');
+    views.phone.classList.remove('hidden');
+}
+
 function clearData() {
-    if (confirm("Reset all admin setup data?")) {
+    if (confirm('Clear setup?')) {
         localStorage.clear();
         location.reload();
     }
 }
 
-/* --- Dashboard Logic --- */
+// --- Dashboard Logic ---
 
-function loadData() {
-    // Fetch from API
-    fetch('/api/orders')
-        .then(res => res.json())
-        .then(data => {
-            allData = data;
-            updateStats();
-            renderRecentTable();
-            renderAllTable();
-        })
-        .catch(err => console.error('Error fetching data:', err));
+async function fetchOrders() {
+    try {
+        const res = await fetch('/api/orders');
+        allOrders = await res.json();
+        return allOrders;
+    } catch (e) {
+        console.error('Fetch error', e);
+        return [];
+    }
 }
 
-function renderAll() {
-    loadData();
+async function renderDashboard() {
+    const orders = await fetchOrders();
+
+    // Stats
+    document.getElementById('totalOrders').innerText = orders.length;
+    document.getElementById('pendingInquiries').innerText = orders.filter(o => o.type === 'inquiry' && o.status !== 'Completed').length;
+
+    // Recent Table
+    renderRecentTable(orders.slice(-5).reverse());
 }
 
-function updateStats() {
-    document.getElementById('totalOrders').innerText = allData.length;
-    const pending = allData.filter(d => d.status === 'New' || d.status === 'Pending').length;
-    document.getElementById('pendingInquiries').innerText = pending;
-    const completed = allData.filter(d => d.status === 'Completed').length;
-    document.getElementById('totalRevenue').innerText = `₹${completed * 5000}`;
-}
-
-function renderRecentTable() {
+function renderRecentTable(items) {
     const tbody = document.getElementById('recentOrdersTable');
-    tbody.innerHTML = '';
-
-    // Top 5
-    allData.slice(0, 5).forEach(item => {
-        const row = `<tr>
-            <td><strong>#${item.id}</strong></td>
-            <td>${item.name}</td>
-            <td>${item.type}</td>
-            <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
-            <td>${item.date}</td>
-        </tr>`;
-        tbody.innerHTML += row;
-    });
+    tbody.innerHTML = items.map(item => `
+        <tr>
+            <td><span style="font-weight:600; color:var(--primary)">#${item.id}</span></td>
+            <td><span style="font-weight:500">${item.name}</span></td>
+            <td><span class="status ${item.type.toLowerCase()}">${item.type}</span></td>
+            <td><span class="status ${item.status.toLowerCase()}">${item.status}</span></td>
+            <td style="color:var(--text-muted)">${item.date}</td>
+        </tr>
+    `).join('');
 }
 
-function renderAllTable() {
-    const tbody = document.querySelector('#allOrdersTable tbody');
-    tbody.innerHTML = '';
-
-    allData.forEach((item, index) => {
-        const row = `<tr>
-            <td><strong>#${item.id}</strong><br><small>${item.date}</small></td>
-            <td>${item.name}<br><small>${item.phone}</small></td>
-            <td>${item.type}<br><small>${item.message || '-'}</small></td>
-            <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
-            <td>
-                <button class="btn-sm" style="color:green; border-color:green;" onclick="updateStatus('${item.id}', 'Completed')">✓</button>
-                <button class="btn-sm" style="color:red; border-color:red;" onclick="deleteItem('${item.id}')">✗</button>
-            </td>
-        </tr>`;
-        tbody.innerHTML += row;
-    });
-}
-
-function getStatusClass(status) {
-    if (status === 'New') return 'new';
-    if (status === 'Completed') return 'completed';
-    return 'pending';
-}
-
-function updateStatus(id, newStatus) {
-    if (!confirm('Mark this order as Completed?')) return;
-
-    fetch(`/api/orders/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) renderAll();
-        })
-        .catch(err => console.error('Error updating status:', err));
-}
-
-function deleteItem(id) {
-    if (!confirm('Delete this record permanently?')) return;
-
-    fetch(`/api/orders/${id}`, {
-        method: 'DELETE'
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) renderAll();
-        })
-        .catch(err => console.error('Error deleting item:', err));
-}
-
-function saveAndRender() {
-    // Deprecated in favor of API calls
-}
-
-// Restoration of switchView function
+// Navigation
 function switchView(viewName) {
     // Hide all
     document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
 
-    // Remove active class from all menu items
-    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-
     // Simplified routing
     if (viewName === 'dashboard') {
         document.getElementById('view-dashboard').classList.remove('hidden');
-        document.querySelector('.menu-item:nth-child(1)').classList.add('active');
-        currentFilter = null; // Reset filter
         document.getElementById('pageTitle').innerText = 'Overview';
     } else if (viewName === 'orders') {
         document.getElementById('view-orders').classList.remove('hidden');
-        document.querySelector('.menu-item:nth-child(2)').classList.add('active');
         currentFilter = 'order';
         document.getElementById('pageTitle').innerText = 'All Orders';
-        document.getElementById('manageRecordsTitle').innerText = 'Manage Orders';
+        renderAll();
     } else if (viewName === 'inquiries') {
         document.getElementById('view-orders').classList.remove('hidden');
-        document.querySelector('.menu-item:nth-child(3)').classList.add('active');
         currentFilter = 'inquiry';
         document.getElementById('pageTitle').innerText = 'Inquiries & Requests';
-        document.getElementById('manageRecordsTitle').innerText = 'Manage Inquiries';
+        renderAll();
     }
-
-    // Refresh table if needed
-    if (viewName !== 'dashboard') renderAll();
 }
 
 // Global filter state
-let currentFilter = 'all';
+let currentFilter = null;
 
-function renderAllTable() {
-    const tbody = document.querySelector('#allOrdersTable tbody');
-    tbody.innerHTML = '';
+function renderAll() {
+    const filtered = currentFilter ? allOrders.filter(o => o.type === currentFilter) : allOrders;
+    const tbody = document.getElementById('allOrdersTable').querySelector('tbody');
 
-    let displayData = allData;
+    tbody.innerHTML = filtered.map(item => {
+        const details = item.type === 'order'
+            ? `<div style="font-weight:500;">${item.product}</div><div style="font-size:0.75rem; color:var(--text-muted);">${item.quantity} · ${item.address}</div>`
+            : `<div style="font-style:italic; color:var(--text-main)">"${item.message}"</div>`;
 
-    if (currentFilter === 'inquiry') {
-        // Show only Inquiries
-        displayData = allData.filter(d => d.type === 'inquiry' || (!d.type && d.status === 'New'));
-    } else if (currentFilter === 'order') {
-        // Show only Orders
-        displayData = allData.filter(d => d.type === 'order' || (!d.type && d.status !== 'New'));
-    }
+        return `
+            <tr>
+                <td><strong style="color:var(--primary)">#${item.id}</strong><br><small style="color:var(--text-muted)">${item.date}</small></td>
+                <td><div style="font-weight:600">${item.name}</div><small style="color:var(--text-muted)">${item.phone}</small></td>
+                <td>${details}</td>
+                <td><span class="status ${item.status.toLowerCase()}">${item.status}</span></td>
+                <td>
+                   <div style="display:flex; gap:8px;">
+                       <button class="btn-modern" style="padding:6px; background:var(--primary)" title="Mark Completed" onclick="updateStatus('${item.id}', 'Completed')">
+                           <i class="ri-check-line" style="font-size:1rem"></i>
+                       </button>
+                       <button class="btn-modern" style="padding:6px; background:#FEE2E2; color:#B91C1C" title="Delete" onclick="deleteItem('${item.id}')">
+                           <i class="ri-delete-bin-line" style="font-size:1rem"></i>
+                       </button>
+                   </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
 
-    // Sort by date/ID descending (newest first)
-    // Assuming simple order for now (API returns newest first usually or we unshifted to top)
-
-    displayData.forEach((item, index) => {
-        // Dynamic Details Column
-        let details = '';
-        if (item.type === 'order') {
-            details = `<div><strong style="color:var(--slate)">${item.product || 'Betel Leaf'}</strong></div>
-                       <div style="font-size:0.8rem; color:var(--text-muted)">Qty: ${item.quantity || '-'}</div>
-                       <div style="font-size:0.8rem; color:var(--text-muted)">${item.address || ''}</div>`;
-        } else {
-            details = `<span style="color:var(--text-muted); font-size:0.9rem;">${item.message || 'No message'}</span>`;
-        }
-
-        const row = `<tr>
-            <td><strong>#${item.id}</strong><br><small style="color:var(--text-muted)">${item.date}</small></td>
-            <td><div style="font-weight:600; color:var(--slate)">${item.name}</div><small style="color:var(--text-muted)">${item.phone}</small></td>
-            <td>${details}</td>
-            <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
-            <td style="white-space:nowrap">
-               <button class="btn-sm btn-action-check" title="Mark Completed" onclick="updateStatus('${item.id}', 'Completed')"><i class="ri-check-line"></i></button>
-               <button class="btn-sm btn-action-delete" title="Delete" onclick="deleteItem('${item.id}')"><i class="ri-delete-bin-line"></i></button>
-            </td>
-        </tr>`;
-        tbody.innerHTML += row;
+async function updateStatus(id, newStatus) {
+    await fetch(`/api/orders/${id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
     });
+    renderDashboard();
+    renderAll();
+}
 
-    if (displayData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No records found.</td></tr>';
-    }
+async function deleteItem(id) {
+    if (!confirm('Delete this record?')) return;
+    await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+    renderDashboard();
+    renderAll();
 }

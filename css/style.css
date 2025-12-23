@@ -205,14 +205,14 @@ img {
 
 /* Hero Section */
 .hero {
-    height: 100vh;
-    background: #1a1a1a url('../assets/hero-bg.jpg') no-repeat center center/cover;
+    min-height: 85vh;
+    background: #000 url('../assets/hero-bg.jpg') no-repeat center center/cover;
     position: relative;
     display: flex;
     align-items: center;
     color: var(--white);
     margin-top: 60px;
-    /* Offset for fixed navbar */
+    padding: 60px 0;
 }
 
 .hero-overlay {
@@ -221,8 +221,11 @@ img {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    /* Dark overlay */
+    /* Gradient from dark on the left (for text) to clearer on the right (for photo) */
+    background: linear-gradient(90deg,
+            rgba(0, 0, 0, 0.85) 0%,
+            rgba(0, 0, 0, 0.4) 50%,
+            rgba(0, 0, 0, 0.1) 100%);
 }
 
 .hero-content {

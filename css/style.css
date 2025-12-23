@@ -153,6 +153,17 @@ img {
     box-shadow: var(--shadow-md);
 }
 
+/* Hero specific button overrides for visibility */
+.hero .btn-outline {
+    border-color: var(--white);
+    color: var(--white);
+}
+
+.hero .btn-outline:hover {
+    background-color: var(--white);
+    color: var(--slate-900);
+}
+
 .btn-block {
     display: flex;
     width: 100%;

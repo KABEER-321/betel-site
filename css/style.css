@@ -130,15 +130,14 @@ img {
 }
 
 .btn-secondary {
-    background-color: transparent;
-    border: 2px solid var(--white);
+    background-color: var(--primary);
     color: var(--white);
 }
 
 .btn-secondary:hover {
-    background-color: var(--white);
-    color: var(--slate-900);
+    background-color: var(--primary-dark);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .btn-outline {
@@ -150,6 +149,8 @@ img {
 .btn-outline:hover {
     background-color: var(--primary);
     color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .btn-block {

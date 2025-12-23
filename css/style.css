@@ -206,18 +206,13 @@ img {
 /* Hero Section */
 .hero {
     height: 100vh;
-    background: url('../assets/hero-bg.jpg') no-repeat center center/cover;
+    background: #1a1a1a url('../assets/hero-bg.jpg') no-repeat center center/cover;
     position: relative;
     display: flex;
     align-items: center;
     color: var(--white);
     margin-top: 60px;
     /* Offset for fixed navbar */
-}
-
-/* Fallback if no image */
-.hero {
-    background-color: #1a1a1a;
 }
 
 .hero-overlay {

@@ -43,8 +43,9 @@ function showAuth(config) {
     views.dashboard.classList.add('hidden');
     views.authContainer.classList.remove('hidden');
 
-    Object.values(views).forEach(el => {
-        if (el && el.id && el.id.startsWith('step-')) el.classList.add('hidden');
+    // Hide all steps explicitly
+    [views.phone, views.otp, views.setup, views.login].forEach(el => {
+        if (el) el.classList.add('hidden');
     });
 
     if (config && config.isSetup) {
@@ -199,7 +200,7 @@ function renderRecentTable() {
     // Top 5
     allData.slice(0, 5).forEach(item => {
         const row = `<tr>
-            <td>#${item.id}</td>
+            <td><strong>#${item.id}</strong></td>
             <td>${item.name}</td>
             <td>${item.type}</td>
             <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
@@ -271,22 +272,31 @@ function switchView(viewName) {
     // Hide all
     document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
 
+    // Remove active class from all menu items
+    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+
     // Simplified routing
     if (viewName === 'dashboard') {
         document.getElementById('view-dashboard').classList.remove('hidden');
         document.querySelector('.menu-item:nth-child(1)').classList.add('active');
         currentFilter = null; // Reset filter
+        document.getElementById('pageTitle').innerText = 'Overview';
     } else if (viewName === 'orders') {
         document.getElementById('view-orders').classList.remove('hidden');
         document.querySelector('.menu-item:nth-child(2)').classList.add('active');
         currentFilter = 'order';
         document.getElementById('pageTitle').innerText = 'All Orders';
+        document.getElementById('manageRecordsTitle').innerText = 'Manage Orders';
     } else if (viewName === 'inquiries') {
         document.getElementById('view-orders').classList.remove('hidden');
         document.querySelector('.menu-item:nth-child(3)').classList.add('active');
         currentFilter = 'inquiry';
         document.getElementById('pageTitle').innerText = 'Inquiries & Requests';
+        document.getElementById('manageRecordsTitle').innerText = 'Manage Inquiries';
     }
+
+    // Refresh table if needed
+    if (viewName !== 'dashboard') renderAll();
 }
 
 // Global filter state
@@ -313,21 +323,21 @@ function renderAllTable() {
         // Dynamic Details Column
         let details = '';
         if (item.type === 'order') {
-            details = `<strong>${item.product || 'Betel Leaf'}</strong><br>
-                       <small>Qty: ${item.quantity || '-'}</small><br>
-                       <small>${item.address || ''}</small>`;
+            details = `<div><strong style="color:var(--slate)">${item.product || 'Betel Leaf'}</strong></div>
+                       <div style="font-size:0.8rem; color:var(--text-muted)">Qty: ${item.quantity || '-'}</div>
+                       <div style="font-size:0.8rem; color:var(--text-muted)">${item.address || ''}</div>`;
         } else {
-            details = `<span class="text-muted">${item.message || 'No message'}</span>`;
+            details = `<span style="color:var(--text-muted); font-size:0.9rem;">${item.message || 'No message'}</span>`;
         }
 
         const row = `<tr>
-            <td><strong>#${item.id}</strong><br><small>${item.date}</small></td>
-            <td>${item.name}<br><small>${item.phone}</small></td>
+            <td><strong>#${item.id}</strong><br><small style="color:var(--text-muted)">${item.date}</small></td>
+            <td><div style="font-weight:600; color:var(--slate)">${item.name}</div><small style="color:var(--text-muted)">${item.phone}</small></td>
             <td>${details}</td>
             <td><span class="status ${getStatusClass(item.status)}">${item.status}</span></td>
-            <td>
-               <button class="btn-sm" style="color:green; border-color:green;" onclick="updateStatus('${item.id}', 'Completed')">✓</button>
-               <button class="btn-sm" style="color:red; border-color:red;" onclick="deleteItem('${item.id}')">✗</button>
+            <td style="white-space:nowrap">
+               <button class="btn-sm btn-action-check" title="Mark Completed" onclick="updateStatus('${item.id}', 'Completed')"><i class="ri-check-line"></i></button>
+               <button class="btn-sm btn-action-delete" title="Delete" onclick="deleteItem('${item.id}')"><i class="ri-delete-bin-line"></i></button>
             </td>
         </tr>`;
         tbody.innerHTML += row;

@@ -584,6 +584,10 @@ img {
     border: 1px solid var(--primary);
 }
 
+.hidden {
+    display: none !important;
+}
+
 /* Footer */
 .footer {
     background: var(--slate-900);

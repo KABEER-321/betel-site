@@ -45,9 +45,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // alert('Processing form: ' + formId); // Debug
+            // Prepare for WhatsApp redirection
+            let whatsappMessage = "";
+            const phone = "918432464520";
 
-            // Send to API
+            if (formId === 'orderForm') {
+                const quantity = `${data.quantity_num} ${data.quantity_unit}`;
+                whatsappMessage = `Hello Mattesabnavar Exports,%0A%0AI would like to place an order request.%0A%0A*Name:* ${data.name}%0A*Phone:* ${data.phone}%0A*Product:* ${data.product}%0A*Quantity:* ${quantity}%0A*Address:* ${data.address}`;
+            } else if (formId === 'inquiryForm') {
+                whatsappMessage = `Hello Mattesabnavar Exports,%0A%0AI have a general inquiry.%0A%0A*Name:* ${data.name}%0A*Phone:* ${data.phone}%0A*Message:* ${data.message}`;
+            }
+
+            // Send to API first for record keeping
             fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -56,17 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(res => res.json())
                 .then(resData => {
                     if (resData.success) {
-                        // success feedback
                         feedback.classList.remove('hidden');
                         form.reset();
-                        setTimeout(() => feedback.classList.add('hidden'), 5000);
+
+                        // WhatsApp Redirection
+                        setTimeout(() => {
+                            window.open(`https://wa.me/${phone}?text=${whatsappMessage}`, '_blank');
+                            feedback.classList.add('hidden');
+                        }, 2000);
                     } else {
                         alert('Error: ' + resData.error);
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('Network Error: ' + err.message);
+                    // Still allow WhatsApp redirection even if API fails (better UX for user)
+                    window.open(`https://wa.me/${phone}?text=${whatsappMessage}`, '_blank');
+                    form.reset();
                 })
                 .finally(() => {
                     btn.innerText = originalText;

@@ -102,34 +102,28 @@ app.post('/api/orders', (req, res) => {
     res.json({ success: true, order: newOrder });
 });
 
-app.put('/api/orders/:id', (req, res) => {
+const handleUpdateStatus = (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
     let orders = getOrders();
-    const index = orders.findIndex(o => o.id === id); // Simple ID matching (string in local db)
-    // Note: Our ID generation 'ORD-...' is unique enough for this demo
-
-    // Actually find by ID property inside object
-    // The param might be just the number part or full string? 
-    // Let's assume ID is accurate. simple find.
-    const orderIndex = orders.findIndex(o => o.id === id); // exact match
+    const orderIndex = orders.findIndex(o => o.id === id);
 
     if (orderIndex !== -1) {
         orders[orderIndex].status = status;
         saveOrders(orders);
         res.json({ success: true });
+    } else if (orders[id]) {
+        orders[id].status = status;
+        saveOrders(orders);
+        res.json({ success: true });
     } else {
-        // Try finding by index if passed as index (legacy admin.js)
-        if (orders[id]) {
-            orders[id].status = status;
-            saveOrders(orders);
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Order not found' });
-        }
+        res.status(404).json({ error: 'Order not found' });
     }
-});
+};
+
+app.put('/api/orders/:id', handleUpdateStatus);
+app.post('/api/orders/:id/status', handleUpdateStatus);
 
 app.delete('/api/orders/:id', (req, res) => {
     const { id } = req.params;
